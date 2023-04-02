@@ -85,89 +85,142 @@ const preview = {
       };
 
       const parent = document.querySelector(".advanced .color-properties");
-      if (propertyName === "background" && document.querySelector("#background-type-gradient").checked) {
-        const valueParts = value.split(",");
-        let angleValue = "45";
-        let color1Value = "#EB5454FF";
-        let color2Value = "#EB5454FF";
-        if (valueParts.length === 3) {
-          angleValue = valueParts[0];
-          color1Value = valueParts[1];
-          color2Value = valueParts[2];
+      if (propertyName === "background") {
+        const getWrapperRadio = (radioName, checked = false) => {
+          const container = document.createElement("div");
+          const type = radioName.split(" ")[0].toLowerCase();
+          container.setAttribute("data-property", propertyName + "-switch");
+          const input = document.createElement("input");
+          input.type = "radio";
+          input.id = "background-type-" + type;
+          input.name = "background-type";
+          input.value = radioName;
+          input.checked = checked;
+          input.onchange = (el) => {
+            this.removeProperty("background");
+            if (document.querySelector("#background-type-gradient")?.checked) {
+              const valueParts = value.split(",");
+              let angleValue = "45";
+              let color1Value = "#EB5454FF";
+              let color2Value = "#EB5454FF";
+              if (valueParts.length === 3) {
+                angleValue = valueParts[0];
+                color1Value = valueParts[1];
+                color2Value = valueParts[2];
+              }
+
+              const input = document.createElement("span");
+              input.className = "grid-middle";
+              input.setAttribute("data-property", propertyName);
+
+              const rotateInputGroup = document.createElement("div");
+              rotateInputGroup.className = "input-text-group";
+
+              const rotate = document.createElement("input");
+              rotate.className = "param";
+              rotate.type = "number";
+              rotate.id = "rotate";
+              rotate.placeholder = "45";
+              rotate.value = angleValue;
+
+              const degText = document.createElement("span");
+              degText.innerText = "\u00B0"; // degree symbol
+
+              rotateInputGroup.appendChild(rotate);
+              rotateInputGroup.appendChild(degText);
+
+              const color1 = document.createElement("input");
+              color1.className = "param jscolor";
+              color1.id = "background-color1";
+              color1.setAttribute(
+                "data-jscolor",
+                JSON.stringify({
+                  format: "hexa",
+                  onChange: `preview.pickerChange(this, '${color1.id}')`,
+                  onInput: `preview.pickerChange(this, '${color1.id}')`,
+                })
+              );
+              const color2 = document.createElement("input");
+              color2.className = "param jscolor";
+              color2.id = "background-color2";
+              color2.setAttribute(
+                "data-jscolor",
+                JSON.stringify({
+                  format: "hexa",
+                  onChange: `preview.pickerChange(this, '${color2.id}')`,
+                  onInput: `preview.pickerChange(this, '${color2.id}')`,
+                })
+              );
+              rotate.name = color1.name = color2.name = propertyName;
+              color1.value = color1Value;
+              color2.value = color2Value;
+              // add elements
+              parent.appendChild(label);
+              input.appendChild(rotateInputGroup);
+              input.appendChild(color1);
+              input.appendChild(color2);
+              parent.appendChild(input);
+              // initialise jscolor on elements
+              jscolor.install(input);
+              // check initial color values
+              this.checkColor(color1.value, color1.id);
+              this.checkColor(color2.value, color2.id);
+            } else {
+              const input = document.createElement("input");
+              input.className = "param jscolor";
+              input.id = propertyName;
+              input.name = propertyName;
+              input.setAttribute("data-property", propertyName);
+              input.setAttribute("data-jscolor", JSON.stringify(jscolorConfig));
+              input.value = value;
+              // add elements
+              parent.appendChild(label);
+              parent.appendChild(input);
+              // initialise jscolor on element
+              jscolor.install(parent);
+              // check initial color value
+              this.checkColor(value, propertyName);
+            }
+            const minus = document.createElement("button");
+            minus.className = "minus btn";
+            minus.setAttribute("onclick", "return preview.removeProperty(this.getAttribute('data-property'));");
+            minus.setAttribute("type", "button");
+            minus.innerText = "−";
+            minus.setAttribute("data-property", propertyName);
+            parent.appendChild(minus);
+            this.update();
+          };
+          const label = document.createElement("label");
+          label.htmlFor = type;
+          label.innerText = radioName;
+          container.appendChild(input);
+          container.appendChild(label);
+          return container;
         }
-
-        const input = document.createElement("span");
-        input.className = "grid-middle";
-        input.setAttribute("data-property", propertyName);
-
-        const rotateInputGroup = document.createElement("div");
-        rotateInputGroup.className = "input-text-group";
-
-        const rotate = document.createElement("input");
-        rotate.className = "param";
-        rotate.type = "number";
-        rotate.id = "rotate";
-        rotate.placeholder = "45";
-        rotate.value = angleValue;
-
-        const degText = document.createElement("span");
-        degText.innerText = "\u00B0"; // degree symbol
-
-        rotateInputGroup.appendChild(rotate);
-        rotateInputGroup.appendChild(degText);
-
-        const color1 = document.createElement("input");
-        color1.className = "param jscolor";
-        color1.id = "background-color1";
-        color1.setAttribute(
-          "data-jscolor",
-          JSON.stringify({
-            format: "hexa",
-            onChange: `preview.pickerChange(this, '${color1.id}')`,
-            onInput: `preview.pickerChange(this, '${color1.id}')`,
-          })
-        );
-        const color2 = document.createElement("input");
-        color2.className = "param jscolor";
-        color2.id = "background-color2";
-        color2.setAttribute(
-          "data-jscolor",
-          JSON.stringify({
-            format: "hexa",
-            onChange: `preview.pickerChange(this, '${color2.id}')`,
-            onInput: `preview.pickerChange(this, '${color2.id}')`,
-          })
-        );
-        rotate.name = color1.name = color2.name = propertyName;
-        color1.value = color1Value;
-        color2.value = color2Value;
-        // add elements
+        const label = document.createElement("label");
+        label.innerText = "Background Type";
+        label.htmlFor = "background-type";
+        label.setAttribute("data-property", propertyName + "-switch");
+        const backgroundType1 = getWrapperRadio("Solid Color", true);
+        const backgroundType2 = getWrapperRadio("Gradient");
         parent.appendChild(label);
-        input.appendChild(rotateInputGroup);
-        input.appendChild(color1);
-        input.appendChild(color2);
-        parent.appendChild(input);
-        // initialise jscolor on elements
-        jscolor.install(input);
-        // check initial color values
-        this.checkColor(color1.value, color1.id);
-        this.checkColor(color2.value, color2.id);
-      } else {
-        const input = document.createElement("input");
-        input.className = "param jscolor";
-        input.id = propertyName;
-        input.name = propertyName;
-        input.setAttribute("data-property", propertyName);
-        input.setAttribute("data-jscolor", JSON.stringify(jscolorConfig));
-        input.value = value;
-        // add elements
-        parent.appendChild(label);
-        parent.appendChild(input);
-        // initialise jscolor on element
-        jscolor.install(parent);
-        // check initial color value
-        this.checkColor(value, propertyName);
+        parent.appendChild(backgroundType1);
+        parent.appendChild(backgroundType2);
       }
+      const input = document.createElement("input");
+      input.className = "param jscolor";
+      input.id = propertyName;
+      input.name = propertyName;
+      input.setAttribute("data-property", propertyName);
+      input.setAttribute("data-jscolor", JSON.stringify(jscolorConfig));
+      input.value = value;
+      // add elements
+      parent.appendChild(label);
+      parent.appendChild(input);
+      // initialise jscolor on element
+      jscolor.install(parent);
+      // check initial color value
+      this.checkColor(value, propertyName);
       // removal button
       const minus = document.createElement("button");
       minus.className = "minus btn";
@@ -176,7 +229,6 @@ const preview = {
       minus.innerText = "−";
       minus.setAttribute("data-property", propertyName);
       parent.appendChild(minus);
-
       // update and exit
       this.update();
     }
@@ -335,18 +387,6 @@ window.addEventListener(
     [...document.querySelectorAll("select:not(#properties)")].forEach((element) => {
       element.addEventListener("change", refresh, false);
     });
-    // when the background-type changes, remove the background and replace it
-    const toggleBackgroundType = () => {
-      const value = document.querySelector("input#background, input#background-color1")?.value;
-      preview.removeProperty("background");
-      if (value && document.querySelector("#background-type-gradient").checked) {
-        preview.addProperty("background", `45,${value},${value}`);
-      } else if (value) {
-        preview.addProperty("background", value);
-      }
-    };
-    document.querySelector("#background-type-solid").addEventListener("change", toggleBackgroundType, false);
-    document.querySelector("#background-type-gradient").addEventListener("change", toggleBackgroundType, false);
     // set input boxes to match URL parameters
     const searchParams = new URLSearchParams(window.location.search);
     const backgroundParams = searchParams.getAll("background");
